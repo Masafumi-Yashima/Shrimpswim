@@ -18,8 +18,14 @@ class GameScene: SKScene {
         static let None:UInt32 = 1<<4
     }
     
+    //プレイヤーシュリンプのアニメーションの設定
+    struct Constants {
+        static let PlayerImages = ["shrimp01","shrimp02","shrimp03","shrimp04"]
+    }
+    
     var baseNode:SKNode!
     var coralNode:SKNode!
+    var player:SKSpriteNode!
     
     override func didMove(to view: SKView) {
         //全ノードの親となるノードを生成
@@ -32,11 +38,13 @@ class GameScene: SKScene {
         self.addChild(coralNode)
         
         //背景画像を構築
-        setupBackgroundSea()
+        self.setupBackgroundSea()
         //岩山画像を構築
-        setupBackgroundRock()
+        self.setupBackgroundRock()
         //地面天井画像を構築
-        setupCeilingAndLand()
+        self.setupCeilingAndLand()
+        //プレイキャラを構築
+        self.setupPlayer()
     }
     
     //背景の配置
@@ -133,5 +141,27 @@ class GameScene: SKScene {
             ceilingsprite.run(repeatForeverLandAnime)
             baseNode.addChild(ceilingsprite)
         }
+    }
+    
+    //プレイヤーシュリンプの配置
+    func setupPlayer() {
+        //Plyaerのパラパラアニメーション作成に必要なSKTextureクラスの配列を定義
+        var playerTexture = [SKTexture]()
+        
+        //パラパラアニメーションに必要な画像を読み込む
+        for imageName in Constants.PlayerImages {
+            let texture = SKTexture(imageNamed: imageName)
+            texture.filteringMode = .linear
+            playerTexture.append(texture)
+        }
+        //パラパラ漫画のアニメーションを作成
+        let playerAnime = SKAction.animate(with: playerTexture, timePerFrame: 0.2)
+        let loopAnimation = SKAction.repeatForever(playerAnime)
+        
+        //キャラクターを生成しアニメーションを設定
+        player = SKSpriteNode(texture: playerTexture[0])
+        player.position = CGPoint(x: self.frame.size.width*0.35, y: self.frame.size.height*0.6)
+        player.run(loopAnimation)
+        self.addChild(player)
     }
 }
