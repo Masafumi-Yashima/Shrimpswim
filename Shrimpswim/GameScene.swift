@@ -9,6 +9,15 @@ import SpriteKit
 
 class GameScene: SKScene {
     
+    //衝突判定
+    struct ColliderType {
+        static let Player:UInt32 = 1<<0
+        static let World:UInt32 = 1<<1
+        static let Coral:UInt32 = 1<<2
+        static let Score:UInt32 = 1<<3
+        static let None:UInt32 = 1<<4
+    }
+    
     var baseNode:SKNode!
     var coralNode:SKNode!
     
@@ -26,6 +35,8 @@ class GameScene: SKScene {
         setupBackgroundSea()
         //岩山画像を構築
         setupBackgroundRock()
+        //地面天井画像を構築
+        setupCeilingAndLand()
     }
     
     //背景の配置
@@ -83,6 +94,44 @@ class GameScene: SKScene {
             aboveSprite.position = CGPoint(x: CGFloat(i)*aboveSprite.size.width, y: self.frame.size.height - above.size().height/2)
             aboveSprite.run(repeatForeverUnderAnime)
             baseNode.addChild(aboveSprite)
+        }
+    }
+    
+    //障害物の地面天井の配置
+    func setupCeilingAndLand() {
+        //地面画像を読み込み
+        let land = SKTexture(imageNamed: "land")
+        land.filteringMode = .nearest
+        //天井画像を読み込み
+        let ceiling = SKTexture(imageNamed: "ceiling")
+        ceiling.filteringMode = .nearest
+        
+        //必要な画像枚数を算出
+        let needNumber = 2 + Int(self.frame.size.width/land.size().width)
+        
+        //アニメーションを作成
+        let moveLandAnime = SKAction.moveBy(x: -land.size().width, y: 0, duration: TimeInterval(land.size().width/100))
+        let resetLandAnime = SKAction.moveBy(x: land.size().width, y: 0, duration: 0)
+        let repeatForeverLandAnime = SKAction.repeatForever(SKAction.sequence([moveLandAnime,resetLandAnime]))
+        
+        //画像の配置とアニメーションの設定
+        for i in 0...needNumber {
+            let landsprite = SKSpriteNode(texture: land)
+            landsprite.position = CGPoint(x: CGFloat(i)*landsprite.size.width, y: landsprite.size.height/2)
+            let ceilingsprite = SKSpriteNode(texture: ceiling)
+            ceilingsprite.position = CGPoint(x: CGFloat(i)*ceilingsprite.size.width, y: self.frame.size.height - ceilingsprite.size.height/2)
+            
+            //画像に物理シミュレーションを設定
+            landsprite.physicsBody = SKPhysicsBody(texture: land, size: land.size())
+            landsprite.physicsBody?.isDynamic = false
+            landsprite.physicsBody?.categoryBitMask = ColliderType.World
+            landsprite.run(repeatForeverLandAnime)
+            baseNode.addChild(landsprite)
+            ceilingsprite.physicsBody = SKPhysicsBody(texture: ceiling, size: ceiling.size())
+            ceilingsprite.physicsBody?.isDynamic = false
+            ceilingsprite.physicsBody?.categoryBitMask = ColliderType.World
+            ceilingsprite.run(repeatForeverLandAnime)
+            baseNode.addChild(ceilingsprite)
         }
     }
 }
