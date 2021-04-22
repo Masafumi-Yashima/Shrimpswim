@@ -28,6 +28,8 @@ class GameScene: SKScene {
     var player:SKSpriteNode!
     
     override func didMove(to view: SKView) {
+        //物理シミュレーションを設定
+        self.physicsWorld.gravity = CGVector(dx: 0, dy: -2.0)
         //全ノードの親となるノードを生成
         baseNode = SKNode()
 //        baseNode?.speed = 1
@@ -162,6 +164,18 @@ class GameScene: SKScene {
         player = SKSpriteNode(texture: playerTexture[0])
         player.position = CGPoint(x: self.frame.size.width*0.35, y: self.frame.size.height*0.6)
         player.run(loopAnimation)
+        
+        //物理シミュレーションを設定
+        player.physicsBody = SKPhysicsBody(texture: playerTexture[0], size: playerTexture[0].size())
+//        player.physicsBody?.isDynamic = true
+        player.physicsBody?.allowsRotation = false
+        
+        //自分自身にPlayerカテゴリを設定
+        player.physicsBody?.categoryBitMask = ColliderType.Player
+        //衝突判定相手にWorldとCoralを設定
+        player.physicsBody?.collisionBitMask = ColliderType.World | ColliderType.Coral
+        player.physicsBody?.contactTestBitMask = ColliderType.World | ColliderType.Coral
+        
         self.addChild(player)
     }
 }
