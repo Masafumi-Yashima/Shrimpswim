@@ -53,13 +53,13 @@ class GameScene: SKScene {
     
     //タップ時の処理
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for touch in touches {
-            let location = touch.location(in: self)
-            //プレーヤーに与えられている重力をゼロにする
-            player.physicsBody?.velocity = CGVector.zero
-            //プレイヤーにy方向へ力を加える
-            player.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 23))
-        }
+//        for touch in touches {
+//            let location = touch.location(in: self)
+        //プレーヤーに与えられている重力をゼロにする
+        player.physicsBody?.velocity = CGVector.zero
+        //プレイヤーにy方向へ力を加える
+        player.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 23))
+//        }
     }
     
     //背景の配置
