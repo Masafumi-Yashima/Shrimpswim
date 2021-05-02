@@ -47,6 +47,8 @@ class GameScene: SKScene {
         self.setupCeilingAndLand()
         //プレイキャラを構築
         self.setupPlayer()
+        //珊瑚を構築
+        self.setupCoral()
     }
     
     //タップ時の処理
@@ -188,5 +190,73 @@ class GameScene: SKScene {
         player.physicsBody?.contactTestBitMask = ColliderType.World | ColliderType.Coral
         
         self.addChild(player)
+    }
+    
+    //珊瑚の配置
+    func setupCoral() {
+        //珊瑚画像を読み取り
+        let coralUnder = SKTexture(imageNamed: "coral_under")
+        coralUnder.filteringMode = .linear
+        let coralAbove = SKTexture(imageNamed: "coral_above")
+        coralAbove.filteringMode = .linear
+        
+        //移動する距離を算出
+        let distanceToMove = CGFloat(self.frame.size.width + 2*coralAbove.size().width)
+        
+        //アニメーションを作成
+        let moveAnime = SKAction.moveBy(x: -distanceToMove, y: 0, duration: TimeInterval(distanceToMove/100))
+        let removeAnime = SKAction.removeFromParent()
+        let coralAnime = SKAction.sequence([moveAnime,removeAnime])
+        
+        //珊瑚を生成するメソッドを呼び出すアニメーションを作成
+        let newCoralAnime = SKAction.run({
+            //珊瑚に関するノードを載せるノードを作成
+            let coral = SKNode()
+            coral.position = CGPoint(x: self.frame.size.width + coralUnder.size().width*2, y: 0)
+            coral.zPosition = -50
+            
+            //地面から伸びる珊瑚のy座標を算出
+            let hight = self.frame.size.height/12
+            let y = CGFloat.random(in: 0...hight*2) + hight
+            
+            //地面から伸びる珊瑚を作成
+            let under = SKSpriteNode(texture: coralUnder)
+            under.position = CGPoint(x: 0, y: y)
+            
+            //珊瑚に物理シミュレーションを設定
+            under.physicsBody = SKPhysicsBody(texture: coralUnder, size: coralUnder.size())
+            under.physicsBody?.isDynamic = false
+            under.physicsBody?.categoryBitMask = ColliderType.Coral
+            under.physicsBody?.contactTestBitMask = ColliderType.Player
+            coral.addChild(under)
+            
+            //天井から伸びる珊瑚を作成
+            let above = SKSpriteNode(texture: coralAbove)
+            above.position = CGPoint(x: 0, y: y + under.size.height/2 + 160 + above.size.height/2)
+            
+            //珊瑚に物理シミュレーションを設定
+            above.physicsBody = SKPhysicsBody(texture: coralAbove, size: above.size)
+            above.physicsBody?.isDynamic = false
+            above.physicsBody?.categoryBitMask = ColliderType.Coral
+            above.physicsBody?.contactTestBitMask = ColliderType.Player
+            coral.addChild(above)
+            
+            //スコアをカウントアップするノードを作成
+            let scoreNode = SKNode()
+            scoreNode.position = CGPoint(x: above.size.width/2 + 5, y: self.size.height/2)
+            //スコアノードに物理シミュレーションを設定
+            scoreNode.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 10, height: self.frame.size.height))
+            scoreNode.physicsBody?.isDynamic = false
+            scoreNode.physicsBody?.categoryBitMask = ColliderType.Score
+            scoreNode.physicsBody?.contactTestBitMask = ColliderType.Player
+            coral.addChild(scoreNode)
+            
+            coral.run(coralAnime)
+            self.coralNode.addChild(coral)
+        })
+        let delayAnime = SKAction.wait(forDuration: 2.5)
+        let repeatForeverAnime = SKAction.repeatForever(SKAction.sequence([newCoralAnime,delayAnime]))
+        
+        self.run(repeatForeverAnime)
     }
 }
