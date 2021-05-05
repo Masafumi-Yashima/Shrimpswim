@@ -27,6 +27,9 @@ class GameScene: SKScene {
     var coralNode:SKNode!
     var player:SKSpriteNode!
     
+    var scoreLabelNode:SKLabelNode!
+    var score = 0
+    
     override func didMove(to view: SKView) {
         //物理シミュレーションを設定
         self.physicsWorld.gravity = CGVector(dx: 0, dy: -2.0)
@@ -49,6 +52,8 @@ class GameScene: SKScene {
         self.setupPlayer()
         //珊瑚を構築
         self.setupCoral()
+        //スコアラベルを構築
+        self.setupScoreLabel()
     }
     
     //タップ時の処理
@@ -258,5 +263,17 @@ class GameScene: SKScene {
         let repeatForeverAnime = SKAction.repeatForever(SKAction.sequence([newCoralAnime,delayAnime]))
         
         self.run(repeatForeverAnime)
+    }
+    
+    //スコアラベルの設定
+    func setupScoreLabel() {
+        //フォント名"Arial Bold"でラベルを作成
+        scoreLabelNode = SKLabelNode(fontNamed: "Arial Bold")
+        scoreLabelNode.fontColor = UIColor.black
+        scoreLabelNode.position = CGPoint(x: self.frame.width/2, y: self.frame.height*0.9)
+        scoreLabelNode.zPosition = -100
+        scoreLabelNode.text = "\(score)"
+        
+        self.addChild(scoreLabelNode)
     }
 }
