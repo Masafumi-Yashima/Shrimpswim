@@ -7,7 +7,7 @@
 
 import SpriteKit
 
-class GameScene: SKScene {
+class GameScene: SKScene,SKPhysicsContactDelegate {
     
     //衝突判定
     struct ColliderType {
@@ -33,6 +33,7 @@ class GameScene: SKScene {
     override func didMove(to view: SKView) {
         //物理シミュレーションを設定
         self.physicsWorld.gravity = CGVector(dx: 0, dy: -2.0)
+        self.physicsWorld.contactDelegate = self
         //全ノードの親となるノードを生成
         baseNode = SKNode()
 //        baseNode?.speed = 1
@@ -65,6 +66,50 @@ class GameScene: SKScene {
         //プレイヤーにy方向へ力を加える
         player.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 23))
 //        }
+    }
+    
+    func didBegin(_ contact: SKPhysicsContact) {
+        //すでにゲームオーバー状態の場合
+        if baseNode.speed <= 0 {
+            return
+        }
+        
+        let rawScoreType = ColliderType.Score
+        let rawNoneType = ColliderType.None
+        if (contact.bodyA.categoryBitMask & rawScoreType) == rawScoreType || (contact.bodyB.categoryBitMask & rawScoreType) == rawScoreType {
+            //スコアを加算しラベルに反映
+            score += 1
+            scoreLabelNode.text = "\(score)"
+            
+            //スコアラベルをアニメーション
+            let scaleUpAnime = SKAction.scale(to: 1.5, duration: 0.1)
+            let scaleDownAnime = SKAction.scale(to: 1.0, duration: 0.1)
+            scoreLabelNode.run(SKAction.sequence([scaleUpAnime,scaleDownAnime]))
+            
+            //スコアカウントアップに設定されているcontactTestBitMaskを変更
+            if (contact.bodyA.categoryBitMask & rawScoreType) == rawScoreType {
+                contact.bodyA.categoryBitMask = ColliderType.None
+                contact.bodyA.contactTestBitMask = ColliderType.None
+            } else {
+                contact.bodyB.categoryBitMask = ColliderType.None
+                contact.bodyB.contactTestBitMask = ColliderType.None
+            }
+        }
+        else if (contact.bodyA.categoryBitMask & rawNoneType) == rawNoneType || (contact.bodyB.categoryBitMask & rawNoneType) == rawNoneType {
+            //何もしない
+        }
+        else {
+            //baseNodeに追加されたもの全てのアニメーションを停止
+            baseNode.speed = 0
+            //プレイキャラのBitMaskを変更
+            player.physicsBody?.collisionBitMask = ColliderType.World
+            //プレイキャラに回転アニメーションを実行
+            let rolling = SKAction.rotate(byAngle:(CGFloat(Double.pi))*player.position.y*0.01, duration: 1)
+            player.run(rolling, completion: {
+                //アニメーション終了時にプレイキャラのアニメーションを停止
+                self.player.speed = 0
+            })
+        }
     }
     
     //背景の配置
