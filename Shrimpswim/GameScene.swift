@@ -59,13 +59,27 @@ class GameScene: SKScene,SKPhysicsContactDelegate {
     
     //タップ時の処理
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-//        for touch in touches {
-//            let location = touch.location(in: self)
-        //プレーヤーに与えられている重力をゼロにする
-        player.physicsBody?.velocity = CGVector.zero
-        //プレイヤーにy方向へ力を加える
-        player.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 23))
-//        }
+        if baseNode.speed > 0 {
+            //プレーヤーに与えられている重力をゼロにする
+            player.physicsBody?.velocity = CGVector.zero
+            //プレイヤーにy方向へ力を加える
+            player.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 23))
+        }
+        else if self.player.speed == 0 {
+            //障害物を全て取り除く
+            coralNode.removeAllChildren()
+            //スコアをリセットする
+            score = 0
+            scoreLabelNode.text = "\(score)"
+            //プレイキャラを再配置
+            player.position = CGPoint(x: self.frame.size.width*0.35, y: self.frame.size.height*0.6)
+            player.physicsBody?.velocity = CGVector.zero
+            player.physicsBody?.collisionBitMask = ColliderType.World | ColliderType.Coral
+            player.zRotation = 0
+            //アニメーションを開始
+            baseNode.speed = 1
+            player.speed = 1
+        }
     }
     
     //衝突が起こった時に呼ばれるメソッド
@@ -94,7 +108,7 @@ class GameScene: SKScene,SKPhysicsContactDelegate {
         else {
             //baseNodeに追加されたもの全てのアニメーションを停止
             baseNode.speed = 0
-            //プレイキャラのBitMaskを変更
+            //プレイキャラのcollisionBitMaskを変更
             player.physicsBody?.collisionBitMask = ColliderType.World
             //プレイキャラに回転アニメーションを実行
             let rolling = SKAction.rotate(byAngle:(CGFloat(Double.pi))*player.position.y*0.01, duration: 1)
