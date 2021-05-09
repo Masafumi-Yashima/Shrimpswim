@@ -41,7 +41,7 @@ class GameScene: SKScene,SKPhysicsContactDelegate {
         
         //障害物を生成するノードを生成
         coralNode = SKNode()
-        self.addChild(coralNode)
+        baseNode.addChild(coralNode)
         
         //背景画像を構築
         self.setupBackgroundSea()
@@ -68,15 +68,17 @@ class GameScene: SKScene,SKPhysicsContactDelegate {
 //        }
     }
     
+    //衝突が起こった時に呼ばれるメソッド
     func didBegin(_ contact: SKPhysicsContact) {
-        //すでにゲームオーバー状態の場合
+        //すでにゲームオーバー状態の場合（珊瑚に当たった後地面にも衝突するため2度目の処理を行わないようにするため）
         if baseNode.speed <= 0 {
             return
         }
         
         let rawScoreType = ColliderType.Score
-        let rawNoneType = ColliderType.None
+//        let rawNoneType = ColliderType.None
         if (contact.bodyA.categoryBitMask & rawScoreType) == rawScoreType || (contact.bodyB.categoryBitMask & rawScoreType) == rawScoreType {
+            print("DEBUG_PRINT:スコアと衝突")
             //スコアを加算しラベルに反映
             score += 1
             scoreLabelNode.text = "\(score)"
@@ -85,19 +87,10 @@ class GameScene: SKScene,SKPhysicsContactDelegate {
             let scaleUpAnime = SKAction.scale(to: 1.5, duration: 0.1)
             let scaleDownAnime = SKAction.scale(to: 1.0, duration: 0.1)
             scoreLabelNode.run(SKAction.sequence([scaleUpAnime,scaleDownAnime]))
-            
-            //スコアカウントアップに設定されているcontactTestBitMaskを変更
-            if (contact.bodyA.categoryBitMask & rawScoreType) == rawScoreType {
-                contact.bodyA.categoryBitMask = ColliderType.None
-                contact.bodyA.contactTestBitMask = ColliderType.None
-            } else {
-                contact.bodyB.categoryBitMask = ColliderType.None
-                contact.bodyB.contactTestBitMask = ColliderType.None
-            }
         }
-        else if (contact.bodyA.categoryBitMask & rawNoneType) == rawNoneType || (contact.bodyB.categoryBitMask & rawNoneType) == rawNoneType {
-            //何もしない
-        }
+//        else if (contact.bodyA.categoryBitMask & rawNoneType) == rawNoneType || (contact.bodyB.categoryBitMask & rawNoneType) == rawNoneType {
+//            //何もしない
+//        }
         else {
             //baseNodeに追加されたもの全てのアニメーションを停止
             baseNode.speed = 0
@@ -229,7 +222,8 @@ class GameScene: SKScene,SKPhysicsContactDelegate {
         player.run(loopAnimation)
         
         //物理シミュレーションを設定
-        player.physicsBody = SKPhysicsBody(texture: playerTexture[0], size: playerTexture[0].size())
+//        player.physicsBody = SKPhysicsBody(texture: playerTexture[0], size: playerTexture[0].size())
+        player.physicsBody = SKPhysicsBody(circleOfRadius: player.size.height/2)
 //        player.physicsBody?.isDynamic = true
         player.physicsBody?.allowsRotation = false
         
@@ -307,7 +301,7 @@ class GameScene: SKScene,SKPhysicsContactDelegate {
         let delayAnime = SKAction.wait(forDuration: 2.5)
         let repeatForeverAnime = SKAction.repeatForever(SKAction.sequence([newCoralAnime,delayAnime]))
         
-        self.run(repeatForeverAnime)
+        self.coralNode.run(repeatForeverAnime)
     }
     
     //スコアラベルの設定
@@ -316,7 +310,7 @@ class GameScene: SKScene,SKPhysicsContactDelegate {
         scoreLabelNode = SKLabelNode(fontNamed: "Arial Bold")
         scoreLabelNode.fontColor = UIColor.black
         scoreLabelNode.position = CGPoint(x: self.frame.width/2, y: self.frame.height*0.9)
-        scoreLabelNode.zPosition = -100
+        scoreLabelNode.zPosition = 100
         scoreLabelNode.text = "\(score)"
         
         self.addChild(scoreLabelNode)
